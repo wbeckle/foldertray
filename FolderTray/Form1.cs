@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace FolderTray
 {
@@ -22,16 +23,21 @@ namespace FolderTray
                     name = line.Trim();
                     if (name.EndsWith(@"\")) name = name.Substring(0, line.Length - 1);
                     name = Path.GetFileName(name);
-                    ToolStripMenuItem item = new ToolStripMenuItem() { Name = name, Text = name, Tag = name, ToolTipText = line };
-                    item = GetMenu(line, item);
-                    menuStrip1.Items.Add(item);
+                    ToolStripMenuItem topMenuItem = new ToolStripMenuItem() { Name = name, Text = name, Tag = name, ToolTipText = line };
+                    topMenuItem = GetSubMenu(line, topMenuItem);
+                    contextMenu.Items.Add(topMenuItem);
                 }
+                ToolStripSeparator separator = new();
+                contextMenu.Items.Add(separator);
+                ToolStripMenuItem item = new ToolStripMenuItem() { Name = "Exit", Text = "Exit", Tag = "Exit", ToolTipText = "Exit" };
+                item.Click += MenuClickHandler;
+                contextMenu.Items.Add(item);
                 return true;
             }
             return false;
         }
 
-        ToolStripMenuItem GetMenu(string path, ToolStripMenuItem menuItem)
+        ToolStripMenuItem GetSubMenu(string path, ToolStripMenuItem menuItem)
         {
             var files = Directory.EnumerateFiles(path);
             foreach (var file in files)
@@ -41,6 +47,11 @@ namespace FolderTray
                 item.Click += MenuClickHandler;
                 menuItem.DropDownItems.Add(item);
             }
+            ToolStripSeparator separator = new();
+            menuItem.DropDownItems.Add(separator);
+            ToolStripMenuItem folderItem = new ToolStripMenuItem() { Tag = "OpenFolder", Name = path, Text = "Open Folder" };
+            folderItem.Click += MenuClickHandler;
+            menuItem.DropDownItems.Add(folderItem);
             return menuItem;
         }
 
@@ -48,6 +59,12 @@ namespace FolderTray
         {
             ToolStripItem? item = sender as ToolStripItem;
             if (item is null || item.Tag is null) return;
+            if (item.Tag.ToString()!.ToLower() == "exit") Application.Exit();
+            if (item.Tag.ToString()!.ToLower() == "openfolder")
+            {
+                OpenFolder(item.Name);
+                return;
+            }
             if (item.Tag.ToString()!.ToLower().EndsWith("ps1"))
             {
                 RunPowerShell(item.Tag.ToString());
@@ -56,6 +73,15 @@ namespace FolderTray
             {
                 RunFile(item.Tag.ToString());
             }
+        }
+
+        void OpenFolder(string path)
+        {
+            if (String.IsNullOrWhiteSpace(path)) return;
+            ProcessStartInfo psi = new ProcessStartInfo("pwsh.exe");
+            psi.UseShellExecute = true;
+            psi.WorkingDirectory = path;
+            Process.Start(psi);
         }
 
         void RunFile(string? cmd)
@@ -79,24 +105,7 @@ namespace FolderTray
         private void frmMain_Load(object sender, EventArgs e)
         {
             if (!LoadMenu()) Application.Exit();
-            this.Location = Properties.Settings.Default.WinLocation;
-            onTop.Checked = Properties.Settings.Default.onTopCheck;
-            this.TopMost = onTop.Checked;
-        }
-
-        private void onTop_CheckedChanged(object sender, EventArgs e)
-        {
-            this.TopMost = onTop.Checked;
-        }
-
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (this.WindowState == FormWindowState.Normal)
-            {
-                Properties.Settings.Default.WinLocation = this.Location;
-                Properties.Settings.Default.onTopCheck = onTop.Checked;
-                Properties.Settings.Default.Save();
-            }
+            notifyIcon.ContextMenuStrip = contextMenu;
         }
     }
 }
