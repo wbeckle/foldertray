@@ -12,6 +12,7 @@ namespace FolderTray
 
         bool LoadMenu()
         {
+            contextMenu.Items.Clear();
             if (File.Exists("FolderTray.txt"))
             {
                 string[] lines = System.IO.File.ReadAllLines(@"FolderTray.txt");
@@ -29,7 +30,11 @@ namespace FolderTray
                 }
                 ToolStripSeparator separator = new();
                 contextMenu.Items.Add(separator);
-                ToolStripMenuItem item = new ToolStripMenuItem() { Name = "Exit", Text = "Exit", Tag = "Exit", ToolTipText = "Exit" };
+                ToolStripMenuItem item = new ToolStripMenuItem() { Name = "Refresh", Text = "Refresh", Tag = "refresh", ToolTipText = "Refresh" };
+                item.Click += MenuClickHandler;
+                contextMenu.Items.Add(item);
+
+                item = new ToolStripMenuItem() { Name = "Exit", Text = "Exit", Tag = "exit", ToolTipText = "Exit" };
                 item.Click += MenuClickHandler;
                 contextMenu.Items.Add(item);
                 return true;
@@ -60,6 +65,12 @@ namespace FolderTray
             ToolStripItem? item = sender as ToolStripItem;
             if (item is null || item.Tag is null) return;
             if (item.Tag.ToString()!.ToLower() == "exit") Application.Exit();
+            if (item.Tag.ToString()!.ToLower() == "refresh")
+            {
+                if (!LoadMenu()) Application.Exit();
+                MessageBox.Show("Menu refreshed");
+                return;
+            }
             if (item.Tag.ToString()!.ToLower() == "openfolder")
             {
                 OpenFolder(item.Name);
@@ -68,11 +79,14 @@ namespace FolderTray
             if (item.Tag.ToString()!.ToLower().EndsWith("ps1"))
             {
                 RunPowerShell(item.Tag.ToString());
+                return;
             }
-            else
+            if (item.Tag.ToString()!.ToLower().EndsWith("js"))
             {
-                RunFile(item.Tag.ToString());
+                RunJavaScript(item.Tag.ToString());
+                return;
             }
+            RunFile(item.Tag.ToString());
         }
 
         void OpenFolder(string path)
@@ -97,6 +111,15 @@ namespace FolderTray
         {
             if (String.IsNullOrWhiteSpace(cmd)) return;
             ProcessStartInfo psi = new ProcessStartInfo("pwsh.exe", cmd);
+            psi.UseShellExecute = true;
+            psi.WorkingDirectory = Path.GetDirectoryName(cmd);
+            Process.Start(psi);
+        }
+
+        void RunJavaScript(string? cmd)
+        {
+            if (String.IsNullOrWhiteSpace(cmd)) return;
+            ProcessStartInfo psi = new ProcessStartInfo("node.exe", cmd);
             psi.UseShellExecute = true;
             psi.WorkingDirectory = Path.GetDirectoryName(cmd);
             Process.Start(psi);
