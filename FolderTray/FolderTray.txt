@@ -1,2 +1,1 @@
 D:\SomeFolderWithScrips
-C:\AnotherFolder
