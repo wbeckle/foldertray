@@ -14,3 +14,4 @@ The folders are expected to contain files that you want to execute when clicked.
 
 ## Known bugs
 In recent builds of Windows 11, sometimes the folders menus are not generated. I have no idea why this happens. A trace of the code shows the filenames are added to the menu items but they just don't show up. It hardly happens, so I haven't bothered to look at it in detail.
+
