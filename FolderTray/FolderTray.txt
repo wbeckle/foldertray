@@ -1,2 +1,2 @@
 D:\SomeFolderWithScrips
-C:\AnotherFolder
+C:\AnotherFolderWithShortcuts
