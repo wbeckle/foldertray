@@ -1,6 +1,4 @@
-using System.Threading;
-
-namespace FolderTray
+namespace Tray2
 {
     internal static class Program
     {
@@ -10,9 +8,6 @@ namespace FolderTray
         [STAThread]
         static void Main()
         {
-            bool createdNewInstance = false;
-            var mutex = new System.Threading.Mutex(true, Application.ProductName, out createdNewInstance);
-            if (!createdNewInstance) { return; }
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
